@@ -3,8 +3,23 @@ const HttpError = require("../helpers/HttpError");
 const asyncHandler = require("../helpers/asyncHandler");
 
 const getAll = asyncHandler(async (req, res, next) => {
-  const result = await Contact.find();
-  res.json(result);
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20 } = req.query;
+
+  const totalCount = await Contact.countDocuments({ owner });
+  const totalPages = Math.ceil(totalCount / limit);
+
+  const result = await Contact.find({ owner }, null, {
+    skip: (page - 1) * limit,
+    limit: limit,
+  }).populate("owner", "name email");
+
+  res.json({
+    contacts: result,
+    page: parseInt(page),
+    totalPages,
+    totalCount,
+  });
 });
 
 const getById = asyncHandler(async (req, res, next) => {
@@ -18,7 +33,8 @@ const getById = asyncHandler(async (req, res, next) => {
 });
 
 const addContact = asyncHandler(async (req, res, next) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
 });
 

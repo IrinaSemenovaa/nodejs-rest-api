@@ -27,6 +27,10 @@ const userSchema = new Schema({
     default: "starter",
   },
   token: String,
+  avatarURL: {
+    type: String,
+    required: true,
+  },
 });
 
 userSchema.post("save", handleMongooseError);
